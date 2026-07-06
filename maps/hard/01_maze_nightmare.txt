@@ -26,7 +26,7 @@ connection: maze_a1-maze_b1
 connection: maze_b1-maze_b2
 connection: maze_b2-maze_c2
 connection: maze_c2-maze_a2
-connection: maze_c2-bottleneck
+connection maze_:c2-bottleneck 
 
 # Dead end traps
 connection: start-dead_end1 [max_link_capacity=2]
