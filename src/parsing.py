@@ -27,115 +27,111 @@ class DroneMap:
 
 class Parsing:
     def __init__(self, path):
-        self.path = path
+        self.nb_drones = 0
         self.drone_map = DroneMap()
+        self.path = path
+        self.data = []
     
-    def skip_comments(self, line: str):
-        if "#" in line:
-            line = line.split("#")[0]
-        return line
     
-    def parse_metadata(self, meta_str :str):
-        metadata: Dict[str ,str] = {}
-        clean_meta = meta_str.strip("[]")
-        for item in clean_meta.split():
-            k, v = item.split("=", 1)
-            metadata[k.strip()] = v.strip()
-        return metadata
-    
-    def Parser(self):
+    def open_file(self):
         try:
             with open(self.path, "r") as file:
-                data: List[str] = file.read().splitlines()
-        except Exception:
-            raise ValueError("[ERROR]: while opening file")
+                self.data = file.read().splitlines()
+        except FileNotFoundError:
+            raise RuntimeError("[ERROR]: File Not Found")
+    
+    
+    def remove_comments(self):
+        if not self.data:
+            raise RuntimeError("[ERROR]: Maps cannot be empty")
         
-        if not data:
-            raise ValueError("[ERROR]: file cannot be empty")
+        clean_data = []
         
-        is_first = True
-        
-        for line in data:
-            line = self.skip_comments(line)
-            
-            if not line:
+        for line in self.data:
+            if "#" in line:
+                line = line.split("#")[0]
+            if not line.strip():
                 continue
-            
-            if is_first:
-                if not line.startswith("nb_drones"):
-                    raise ValueError("[ERROR]: Lines must be start with nb_drones")
-                try:
-                    self.drone_map.nb_drones = int(line.split(":")[1].strip())
-                    is_first = False
-                except Exception:
-                    raise ValueError(f"[ERROR]: Invalid Syntax {line}")
-                continue
-            
+            clean_data.append(line)
+        self.data = clean_data
+    
+    
+    def parse_metadata(self, metadata: str, av_meta: List[str]):
+        meta_dict = {}
+        if not metadata.startswith("["):
+            raise RuntimeError("[ERROR]: Invalid metadata format")
+        if not metadata.endswith("]"):
+            raise RuntimeError("[ERROR]: Invalid metadata format")
+        metadata = metadata[1:-1]
+        metadata = metadata.split()
+        for meta in metadata:
+            if "=" not in meta:
+                raise RuntimeError("[ERROR]: Invalid metadata format")
+            key, value = meta.split("=")
+            if key not in av_meta:
+                raise RuntimeError(f"[ERROR]: Invalid metadata key: {key}")
+            meta_dict[key] = value
+        return meta_dict
+    
+    
+    def parse_zones(self, line: str):
+        zone_name, zone_data = line.split(":", 1)
+        zone_data = zone_data.split()
+        if len(zone_data) < 3:
+            raise RuntimeError("[ERROR]: Invalid zone format")
+        try:
+            name, x, y = zone_data[0], int(zone_data[1]), int(zone_data[2])
+        except ValueError:
+            raise RuntimeError("[ERROR]: Invalid zone coordinates")
+        if len(zone_data) > 3:
+            metadata = self.parse_metadata(zone_data[3], ["color", "max_drones", "zone"])
+        
+        zone = Zone(name, x, y, metadata.get("color", "red"), int(metadata.get("max_drones", 1)), metadata.get("zone", "normal"))
+        
+        return zone
+    
+    def parse_connections(self, line: str):
+        connection_name, connection_data = line.split(":", 1)
+        connection_data = connection_data.split()
+        
+        metadata = {}
+        
+        if len(connection_data) > 2:
+            connection_data, metadata = connection_data[:-1], self.parse_metadata(connection_data[-1], ["max_link_capacity"])
+        
+        zone_a, zone_b = connection_data[0], connection_data[1]
+        max_link_capacity = int(metadata.get("max_link_capacity", 1))
+        
+        connection = Connections(zone_a, zone_b, max_link_capacity)
+        return connection
+    
+    def parser(self):
+        self.open_file()
+        self.remove_comments()
+        
+        is_first_line = True
+        
+        for line in self.data:
             if ":" not in line:
-                raise ValueError(f"[ERROR]: Invalid Syntax {line}")
-            
-            prefex, content = line.split(":", 1)
-            prefex = prefex.strip()
-            content: str = content.strip()
-            
-            if prefex in ["hub", "start_hub", "end_hub"]:
-                meta_str = ""
-                
-                if "[" in content and content.endswith("]"):
-                    start_idx = content.index("[")
-                    meta_str = content[start_idx:]
-                    content = content[:start_idx]
-                
-                parts = content.split()
-                
-                if len(parts) < 3:
-                    raise ValueError("[ERROR]: Incompleted Data")
-                
-                name, x_str, y_str = parts[0], parts[1], parts[2]
-                
-                meta_dict = self.parse_metadata(meta_str) if meta_str else {}
-                
-                z_type = meta_dict.get("zone", "normal")
-                color = meta_dict.get("color", "none")
-                
-                if prefex in ["start_hub", "end_hub"]:
-                    max_dr = 1
-                else:
-                    max_dr = int(meta_dict.get("max_drones", 1))
-                
-                zone_obj = Zone(name, int(x_str), int(y_str), color, max_dr, z_type)
-                
-                self.drone_map.zones[name] = zone_obj
-                
-                if prefex == "start_hub":
-                    if self.drone_map.start_hub is not None:
-                        raise ValueError("[ERROR]: must write start_hub just one time")
-                    self.drone_map.start_hub = zone_obj
-                elif prefex == "end_hub":
-                    if self.drone_map.end_hub is not None:
-                        raise ValueError("[ERROR]: must write end_hub just one time")
-                    self.drone_map.end_hub = zone_obj
-                
-            elif prefex == "connection":
-                meta_str = ""
-                if "[" in content and content.endswith("]"):
-                    start_idx = content.index("[")
-                    meta_str = content[start_idx:]
-                    content = content[:start_idx]
-                
-                if "-" not in content:
-                    raise ValueError("[ERROR]: Invalid Connection")
-                
-                zone_a, zone_b = content.split("-", 1)
-                zone_a, zone_b = zone_a.strip(), zone_b.strip()
-                
-                meta_dict = self.parse_metadata(meta_str) if meta_str else {}
-                max_link_capacity = meta_dict.get("max_link_capacity", 1)
-                
-                for conn in self.drone_map.connections:
-                    if (conn.zone_a == zone_a and conn.zone_b == zone_b) or (conn.zone_a == zone_b and conn.zone_b == zone_a):
-                        raise ValueError("[ERROR]: Connection are duplicated")
-                self.drone_map.connections.append(Connections(zone_a, zone_b, max_link_capacity))
-        if not self.drone_map.end_hub or not self.drone_map.start_hub:
-            raise ValueError("[ERROR]: You must include start_hub and end_hub")
-        return self.drone_map
+                raise RuntimeError("[ERROR]: Invalid line format")
+            if is_first_line:
+                if not line.startswith("nb_drones"):
+                    raise RuntimeError("[ERROR]: First line must be nb_drones")
+                self.nb_drones = int(line.split(":")[1])
+                self.drone_map.nb_drones = self.nb_drones
+                is_first_line = False
+            else:
+                line_type, line_data = line.split(":", 1)
+                if line_type == "start_hub":
+                    self.drone_map.start_hub = self.parse_zones(line)
+                elif line_type == "end_hub":
+                    self.drone_map.end_hub = self.parse_zones(line)
+                elif line_type == "hub":
+                    zone = self.parse_zones(line)
+                    self.drone_map.zones[zone.name] = zone
+                elif line_type == "connection":
+                    connection = self.parse_connections(line)
+                    self.drone_map.connections.append(connection)
+                if line_type not in ["start_hub", "end_hub", "hub", "connection"]:
+                    raise RuntimeError(f"[ERROR]: Invalid line type: {line_type}")
+            print(f"[INFO]: Parsed line: {line}")
