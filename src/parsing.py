@@ -76,7 +76,8 @@ class Parsing:
     
     def parse_zones(self, line: str):
         zone_name, zone_data = line.split(":", 1)
-        zone_data = zone_data.split()
+        zone_data = zone_data.strip()
+        zone_data = zone_data.split(' ', 3)
         if len(zone_data) < 3:
             raise RuntimeError("[ERROR]: Invalid zone format")
         try:
@@ -92,7 +93,7 @@ class Parsing:
     
     def parse_connections(self, line: str):
         connection_name, connection_data = line.split(":", 1)
-        connection_data = connection_data.split()
+        connection_data = connection_data.split(' ', 3)
         
         metadata = {}
         
@@ -134,4 +135,4 @@ class Parsing:
                     self.drone_map.connections.append(connection)
                 if line_type not in ["start_hub", "end_hub", "hub", "connection"]:
                     raise RuntimeError(f"[ERROR]: Invalid line type: {line_type}")
-            print(f"[INFO]: Parsed line: {line}")
+        return self.drone_map
