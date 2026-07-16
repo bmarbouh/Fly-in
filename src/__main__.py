@@ -1,6 +1,5 @@
 from src.parsing import Parsing
-from src.algorithme import Graph
-
+from src.algorithme import Graph, Dijkstra_path_find
 
     
 
@@ -10,12 +9,11 @@ def main():
     data = Parsing(drone_map)
     dronemap = data.parser()
     graph = Graph(dronemap)
-    
-    for key in graph:
-        print(key)
+    path = Dijkstra_path_find(graph, dronemap.start_hub.name, dronemap.end_hub.name)
 
 if __name__ == "__main__":
-    try:
-        main()
-    except (Exception, KeyboardInterrupt) as e:
-        print(e)
+    main()
+    # try:
+    #     main()
+    # except (Exception, KeyboardInterrupt) as e:
+    #     print(e)
