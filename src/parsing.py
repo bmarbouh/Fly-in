@@ -93,14 +93,14 @@ class Parsing:
     
     def parse_connections(self, line: str):
         connection_name, connection_data = line.split(":", 1)
-        connection_data = connection_data.split(' ', 3)
+        connection_data = connection_data.split('-', 3)
         
         metadata = {}
         
         if len(connection_data) > 2:
             connection_data, metadata = connection_data[:-1], self.parse_metadata(connection_data[-1], ["max_link_capacity"])
         
-        zone_a, zone_b = connection_data[0], connection_data[1]
+        zone_a, zone_b = connection_data[0].strip(), connection_data[1].strip()
         max_link_capacity = int(metadata.get("max_link_capacity", 1))
         
         connection = Connections(zone_a, zone_b, max_link_capacity)

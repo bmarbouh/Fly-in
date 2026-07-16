@@ -1,5 +1,5 @@
 from src.parsing import Parsing
-
+from src.algorithme import Graph
 
 
     
@@ -9,7 +9,10 @@ def main():
     
     data = Parsing(drone_map)
     dronemap = data.parser()
+    graph = Graph(dronemap)
     
+    for key in graph:
+        print(key)
 
 if __name__ == "__main__":
     try:
