@@ -97,14 +97,12 @@ class Parsing:
         
         metadata = {}
         
-        # 1. نفصل الميتاداتا أولاً إذا كانت موجودة في نهاية السطر
         if "[" in connection_data and connection_data.endswith("]"):
             start_idx = connection_data.index("[")
             meta_str = connection_data[start_idx:]
             connection_data = connection_data[:start_idx].strip()
             metadata = self.parse_metadata(meta_str, ["max_link_capacity"])
         
-        # 2. الآن نقسم الأسماء بناءً على الشرطة '-' بكل أمان
         if "-" not in connection_data:
             raise RuntimeError("[ERROR]: Invalid connection format (missing '-')")
             
