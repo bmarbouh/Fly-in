@@ -93,14 +93,25 @@ class Parsing:
     
     def parse_connections(self, line: str):
         connection_name, connection_data = line.split(":", 1)
-        connection_data = connection_data.split('-', 3)
+        connection_data = connection_data.strip()
         
         metadata = {}
         
-        if len(connection_data) > 2:
-            connection_data, metadata = connection_data[:-1], self.parse_metadata(connection_data[-1], ["max_link_capacity"])
+        # 1. نفصل الميتاداتا أولاً إذا كانت موجودة في نهاية السطر
+        if "[" in connection_data and connection_data.endswith("]"):
+            start_idx = connection_data.index("[")
+            meta_str = connection_data[start_idx:]
+            connection_data = connection_data[:start_idx].strip()
+            metadata = self.parse_metadata(meta_str, ["max_link_capacity"])
         
-        zone_a, zone_b = connection_data[0].strip(), connection_data[1].strip()
+        # 2. الآن نقسم الأسماء بناءً على الشرطة '-' بكل أمان
+        if "-" not in connection_data:
+            raise RuntimeError("[ERROR]: Invalid connection format (missing '-')")
+            
+        zones = connection_data.split("-", 1)
+        zone_a = zones[0].strip()
+        zone_b = zones[1].strip()
+        
         max_link_capacity = int(metadata.get("max_link_capacity", 1))
         
         connection = Connections(zone_a, zone_b, max_link_capacity)

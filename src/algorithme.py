@@ -70,10 +70,49 @@ class Dijkstra_path_find:
         
         self.distances[self.start_name] = 0
         
-        self.neighbors_visit[self.start_name] = (0, self.start_name)
+        self.neighbors_visit = [(0, self.start_name)]
         
         heapq.heapify(self.neighbors_visit)
         
+        counter = 1
+        
         while self.neighbors_visit:
-            ...
+            print(f"Line {counter}: ")
+            print(f"neighbors_visit : {self.neighbors_visit}")
+            current_dis, current_node = heapq.heappop(self.neighbors_visit)
             
+            print(f"distances: {self.distances}")
+            print(f"parent: {self.parent}")
+            print("----------------------------------------")
+            if current_node == self.end_name:
+                break
+            
+            if current_dis > self.distances[current_node]:
+                continue
+            
+            
+            for edge in self.graph.adjuncy[current_node]:
+                neighbor_name = edge.to_zone.name
+                neighbor_cost = edge.to_zone.mode
+                
+                
+                cost = 2 if neighbor_cost == "restricted" else 1
+                
+                new_dist = cost + current_dis
+                
+                if new_dist < self.distances[neighbor_name]:
+                    self.distances[neighbor_name] = new_dist
+                    self.parent[neighbor_name] = current_node
+                    heapq.heappush(self.neighbors_visit, (new_dist, neighbor_name ))
+        path = []
+        curr = self.end_name
+        
+        while curr is not None:
+            path.append(curr)
+            curr = self.parent.get(curr)
+            
+        path.reverse()
+        
+        if path and path[0] == self.start_name:
+            return path
+        return []
