@@ -74,16 +74,16 @@ class Dijkstra_path_find:
         
         heapq.heapify(self.neighbors_visit)
         
-        counter = 1
+        # counter = 1
         
         while self.neighbors_visit:
-            print(f"Line {counter}: ")
-            print(f"neighbors_visit : {self.neighbors_visit}")
+            # print(f"Line {counter}: ")
+            # print(f"neighbors_visit : {self.neighbors_visit}")
             current_dis, current_node = heapq.heappop(self.neighbors_visit)
             
-            print(f"distances: {self.distances}")
-            print(f"parent: {self.parent}")
-            print("----------------------------------------")
+            # print(f"distances: {self.distances}")
+            # print(f"parent: {self.parent}")
+            # print("----------------------------------------")
             if current_node == self.end_name:
                 break
             
