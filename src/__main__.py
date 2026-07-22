@@ -22,8 +22,8 @@ def main():
     # print(graph)
     path = Dijkstra(dronemap.start_hub.name,
                     dronemap.end_hub.name, graph, dronemap).path_finding()
-    print(path)
-    # simulation = Simulator(path)
+    # print(path)
+    simulation = Simulator(graph, dronemap, path).run_sim()
 
 
 if __name__ == "__main__":
