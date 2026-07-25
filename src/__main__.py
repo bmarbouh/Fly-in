@@ -23,11 +23,12 @@ def main():
     path = Dijkstra(dronemap.start_hub.name,
                     dronemap.end_hub.name, graph, dronemap).path_finding()
     # print(path)
-    simulation = Simulator(graph, dronemap, path).run_sim()
+    simulation = Simulator(path, dronemap, graph).run_sim()
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except (Exception, KeyboardInterrupt) as e:
-        print(e)
+    main()
+    # try:
+    #     main()
+    # except (Exception, KeyboardInterrupt) as e:
+    #     print(e)
