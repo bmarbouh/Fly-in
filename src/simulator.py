@@ -1,6 +1,62 @@
 from src.algorithm import Graph
 from typing import List, Dict
 from src.parsing import DroneMap
+
+
+class ReservationTable:
+    def __init__(self, dronemap):
+        self.dronemap = dronemap
+        self.zone_res = {}
+        self.link_res = {}
+    
+    def is_valid_move(self, curr_z:str, next_z:str, turn: int, graph_dict):
+        end_zone = self.dronemap.end_zone.name
+        
+        if curr_z == next_z:
+            return True
+        
+        link = tuple(sorted([curr_z, next_z]))
+        curr_edges = graph_dict[curr_z]
+        edge_target = next(
+            (edge for edge in curr_edges if (edge.to_zone.name if hasattr(edge.to_zone, 'name') else edge.to_zone) == next_z),
+            None
+        )
+        
+        if not edge_target:
+            return False
+        
+        if self.link_res.get((link, turn), 0) >= edge_target.max_link_capacity:
+            return False
+        
+        if next_z != end_zone:
+            max_drones = self.dronemap.zones[next_z].max_drones
+            if self.zone_res.get((next_z, turn + 1), 0) >= max_drones:
+                return False
+        
+        return True
+    
+    def reserve_path(self, path: List[str]):
+        end_zone = self.dronemap.end_zone.name
+        
+        for turn, zone in enumerate(path):
+            if zone != end_zone:
+                self.zone_res[(zone, turn)] = self.zone_res.get((zone, turn), 0) + 1
+            
+            if turn > len(path) - 1:
+                next_zone = path[turn + 1]
+                
+                if zone != next_zone:
+                    link = tuple(sorted([zone, next_zone]))
+                    self.link_res[(link, turn)] = self.link_res.get((link, turn), 0) + 1
+
+
+
+
+
+
+
+
+
 class DroneStatus:
     def __init__(self, id: int, path: List[str]):
         self.id = id
@@ -78,4 +134,3 @@ class Simulator:
                     print(f"Drone {drone.id} moved: {drone.path[drone.position - 1]} -> {next_z}")
                 else:
                     print(f"Drone {drone.id} attend in: {drone.path[drone.position]}")
-            
