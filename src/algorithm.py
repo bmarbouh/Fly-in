@@ -1,7 +1,7 @@
 
 from src.parsing import DroneMap
 import heapq
-from simulator import BookTable
+from src.simulator import BookTable
 
 class Edge:
     def __init__(self, to_zone, max_link_capacity):
@@ -132,3 +132,52 @@ class Dijkstra:
         path.append(start_state)
         path.reverse()
         return path
+
+
+class Scheduler:
+    def __init__(self, graph: Graph, dronemap: DroneMap, book_table: BookTable, max_turns: int):
+        self.graph = graph
+        self.dronemap = dronemap
+        self.book_table = book_table
+        self.max_turns = max_turns
+        self.paths = {}
+
+    def scheduler(self):
+        for drone_id in range(self.dronemap.nb_drones):
+            start_turn = 0
+
+            dijkstra = Dijkstra(
+                self.dronemap.start_hub.name,
+                self.dronemap.end_hub.name,
+                self.graph.graph,
+                self.dronemap,
+                self.book_table,
+                start_turn,
+                self.max_turns
+            )
+
+            path = dijkstra.path_finder()
+
+            if path is None:
+                raise RuntimeError(
+                    f"Could not find path for drone {drone_id}"
+                )
+
+            self.paths[drone_id] = path
+
+            for zone, turn in path:
+                self.book_table.reserve_zone(zone, turn)
+
+            for i in range(len(path) - 1):
+                current_zone, current_turn = path[i]
+                next_zone, next_turn = path[i + 1]
+
+                connection_turn = current_turn + 1
+
+                if current_zone != next_zone:
+                    self.book_table.reserve_conn(
+                        current_zone,
+                        next_zone,
+                        connection_turn
+                    )
+        return self.paths

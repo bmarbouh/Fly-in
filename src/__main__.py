@@ -1,5 +1,5 @@
 from src.parsing import Parsing
-from src.algorithm import Graph, Dijkstra
+from src.algorithm import Graph, Dijkstra, Scheduler
 from src.simulator import Simulator, BookTable
 import sys
 
@@ -10,26 +10,20 @@ def main():
     file = sys.argv[1]
     data = Parsing(file)
     dronemap = data.parser()
-    BookTable(dronemap)
-    # print("Parsing Return:\n")
-    # print(f"nb_drones: {dronemap.nb_drones}")
-    # print(f"start_hub: {dronemap.start_hub.name} {dronemap.start_hub.coords} {dronemap.start_hub.color} {dronemap.start_hub.max_drones} {dronemap.start_hub.mode}")
-    # for name, zone in dronemap.zones.items():
-    #     print(f"{name}: {zone.name} {zone.coords} {zone.color} {zone.max_drones} {zone.mode}")
-    # for conn in dronemap.connections:
-    #     print(f"{conn.zone_a} {conn.zone_b} max {conn.max_link_capacity}")
-    # print("\n")
-    # graph = Graph(dronemap).build_graph()
-    # # print(graph)
-    # path = Dijkstra(dronemap.start_hub.name,
-    #                 dronemap.end_hub.name, graph, dronemap).path_finding()
-    # # print(path)
-    # simulation = Simulator(path, dronemap, graph).run_sim()
+    
+    graph = Graph(dronemap)
+    
+    book_table = BookTable(dronemap)
+    
+    scheduler = Scheduler(graph, dronemap, book_table, 1000)
+
+    paths = scheduler.scheduler()
+    
+    simulator = Simulator(paths, dronemap).run_sim()
 
 
 if __name__ == "__main__":
-    main()
-    # try:
-    #     main()
-    # except (Exception, KeyboardInterrupt) as e:
-    #     print(e)
+    try:
+        main()
+    except (Exception, KeyboardInterrupt) as e:
+        print(e)
