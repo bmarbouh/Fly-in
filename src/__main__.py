@@ -7,15 +7,17 @@ def main():
     if len(sys.argv) != 2:
         print("Usage: python3 -m src <map_file>")
         return
+    
     file = sys.argv[1]
     data = Parsing(file)
+    
     dronemap = data.parser()
     
     graph = Graph(dronemap)
     
     book_table = BookTable(dronemap)
     
-    scheduler = Scheduler(graph, dronemap, book_table, 1000)
+    scheduler = Scheduler(graph, dronemap, book_table)
 
     paths = scheduler.scheduler()
     

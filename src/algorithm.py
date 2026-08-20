@@ -40,14 +40,13 @@ class Graph:
 
 
 class Dijkstra:
-    def __init__(self, start_name, end_name, graph, dronemap: DroneMap, book_table: BookTable, start_turn: int, max_turns: int):
+    def __init__(self, start_name, end_name, graph, dronemap: DroneMap, book_table: BookTable, start_turn: int):
         self.start_name = start_name
         self.end_name = end_name
         self.graph = graph
         self.dronemap = dronemap
         self.book_table = book_table
         self.start_turn = start_turn
-        self.max_turns = max_turns
         self.distance = {}
         self.parent = {}
         self.queue = []
@@ -85,8 +84,6 @@ class Dijkstra:
                 final_state = current_state
                 break
             
-            if current_turn >= self.max_turns:
-                continue
             
             for edge in self.graph.get(current_zone, []):
                 next_zone = edge.to_zone
@@ -107,16 +104,15 @@ class Dijkstra:
                     heapq.heappush(self.queue, (arrival_turn, new_state))
             
             wait_turn = current_turn + 1
-            if wait_turn <= self.max_turns:
-                is_zone_available = self.book_table.is_zone_available(current_zone, wait_turn)
+            is_zone_available = self.book_table.is_zone_available(current_zone, wait_turn)
+            
+            if is_zone_available:
+                wait_state = (current_zone, wait_turn)
                 
-                if is_zone_available:
-                    wait_state = (current_zone, wait_turn)
-                    
-                    if wait_turn < self.distance.get(wait_state, float('inf')):
-                        self.distance[wait_state] = wait_turn
-                        self.parent[wait_state] = current_state
-                        heapq.heappush(self.queue, (wait_turn, wait_state))
+                if wait_turn < self.distance.get(wait_state, float('inf')):
+                    self.distance[wait_state] = wait_turn
+                    self.parent[wait_state] = current_state
+                    heapq.heappush(self.queue, (wait_turn, wait_state))
                         
         if final_state is None:
             return None
@@ -135,11 +131,10 @@ class Dijkstra:
 
 
 class Scheduler:
-    def __init__(self, graph: Graph, dronemap: DroneMap, book_table: BookTable, max_turns: int):
+    def __init__(self, graph: Graph, dronemap: DroneMap, book_table: BookTable):
         self.graph = graph
         self.dronemap = dronemap
         self.book_table = book_table
-        self.max_turns = max_turns
         self.paths = {}
 
     def scheduler(self):
@@ -153,7 +148,6 @@ class Scheduler:
                 self.dronemap,
                 self.book_table,
                 start_turn,
-                self.max_turns
             )
 
             path = dijkstra.path_finder()
