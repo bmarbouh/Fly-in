@@ -3,58 +3,46 @@ from typing import List, Dict
 from src.parsing import DroneMap
 
 
-class ReservationTable:
-    def __init__(self, dronemap):
+class BookTable:
+    def __init__(self, dronemap: DroneMap):
         self.dronemap = dronemap
-        self.zone_res = {}
-        self.link_res = {}
+        self.zones_res = {}
+        self.conn_res = {}
+        self.conn_caps = {
+            tuple(sorted([conn.zone_a, conn.zone_b])): conn.max_link_capacity
+            for conn in dronemap.connections
+        }
     
-    def is_valid_move(self, curr_z:str, next_z:str, turn: int, graph_dict):
-        end_zone = self.dronemap.end_zone.name
+    def is_zone_available(self, zone_name, turn) -> bool:
         
-        if curr_z == next_z:
+        if zone_name in (self.dronemap.start_hub.name, self.dronemap.end_hub.name):
             return True
         
-        link = tuple(sorted([curr_z, next_z]))
-        curr_edges = graph_dict[curr_z]
-        edge_target = next(
-            (edge for edge in curr_edges if (edge.to_zone.name if hasattr(edge.to_zone, 'name') else edge.to_zone) == next_z),
-            None
-        )
+        zone_nb = self.zones_res.get((zone_name, turn), 0)
         
-        if not edge_target:
+        zone_cap = self.dronemap.zones[zone_name].max_drones
+        
+        if zone_nb >= zone_cap:
             return False
-        
-        if self.link_res.get((link, turn), 0) >= edge_target.max_link_capacity:
-            return False
-        
-        if next_z != end_zone:
-            max_drones = self.dronemap.zones[next_z].max_drones
-            if self.zone_res.get((next_z, turn + 1), 0) >= max_drones:
-                return False
-        
         return True
     
-    def reserve_path(self, path: List[str]):
-        end_zone = self.dronemap.end_zone.name
+    def is_conn_available(self, zone_a: str, zone_b: str, turn: int) -> bool:
+        sorted_pair = tuple(sorted([zone_a, zone_b]))
         
-        for turn, zone in enumerate(path):
-            if zone != end_zone:
-                self.zone_res[(zone, turn)] = self.zone_res.get((zone, turn), 0) + 1
-            
-            if turn > len(path) - 1:
-                next_zone = path[turn + 1]
-                
-                if zone != next_zone:
-                    link = tuple(sorted([zone, next_zone]))
-                    self.link_res[(link, turn)] = self.link_res.get((link, turn), 0) + 1
+        conn_key = (sorted_pair, turn)
+        conn_nb = self.conn_res.get(conn_key, 0)
+        
+        link_cap = self.conn_caps.get(sorted_pair, 0)
+        
+        return conn_nb < link_cap
+    
+    def reserve_zone(self, zone_name: str, turn: int) -> None:
+        key = (zone_name, turn)
+        self.zones_res[key] = self.zones_res.get(key, 0) + 1
 
-
-
-
-
-
-
+    def reserve_conn(self, zone_a: str, zone_b: str, turn: int) -> None:
+        conn_key = (tuple(sorted([zone_a, zone_b])), turn)
+        self.conn_res[conn_key] = self.conn_res.get(conn_key, 0) + 1
 
 
 class DroneStatus:
@@ -134,3 +122,4 @@ class Simulator:
                     print(f"Drone {drone.id} moved: {drone.path[drone.position - 1]} -> {next_z}")
                 else:
                     print(f"Drone {drone.id} attend in: {drone.path[drone.position]}")
+            
