@@ -21,7 +21,7 @@ def main():
 
     paths = scheduler.scheduler()
     
-    simulator = Simulator(paths, dronemap).run_sim()
+    Simulator(paths, dronemap).run_sim()
 
 
 if __name__ == "__main__":
