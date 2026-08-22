@@ -2,6 +2,7 @@ from src.parsing import Parsing
 from src.algorithm import Graph, Scheduler
 from src.simulator import Simulator, BookTable
 import sys
+from src.visualizer import Visualizer
 
 
 def main():
@@ -22,8 +23,8 @@ def main():
 
     paths = scheduler.scheduler()
 
-    Simulator(paths, dronemap).run_sim()
-
+    # Simulator(paths, dronemap).run_sim()
+    Visualizer(paths, dronemap).run()
 
 if __name__ == "__main__":
     try:
