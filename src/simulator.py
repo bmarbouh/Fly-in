@@ -49,10 +49,23 @@ class DroneStatus:
     def __init__(self, drone_id: int, schedule: List[Tuple[str, int]]):
         self.id = drone_id
         self.schedule = schedule
-        self.timeline = {turn: zone for zone, turn in schedule}
+        self.timeline: dict = {}
 
-    def get_zone_at(self, turn: int) -> str:
-        """Returns the zone the drone is in at a specific turn."""
+        first_zone, first_turn = schedule[0]
+        self.timeline[first_turn] = first_zone
+
+        for i in range(len(schedule) - 1):
+            zone_a, turn_a = schedule[i]
+            zone_b, turn_b = schedule[i + 1]
+            gap = turn_b - turn_a
+
+            if gap == 2:
+                self.timeline[turn_a + 1] = f"{zone_a}-{zone_b}"
+
+            self.timeline[turn_b] = zone_b
+
+    def get_zone_at(self, turn: int):
+        """Returns the zone/connection the drone occupies at a specific turn."""
         return self.timeline.get(turn)
 
 
@@ -73,7 +86,7 @@ class Simulator:
         end_zone = self.droneMap.end_hub.name
 
         for turn in range(1, self.total_turns + 1):
-            print(f"============= Turn N: {turn} =============")
+            turn_moves = []
 
             for drone in self.drones:
                 prev_zone = drone.get_zone_at(turn - 1)
@@ -83,9 +96,7 @@ class Simulator:
                     continue
 
                 if curr_zone != prev_zone:
-                    print(
-                        f"Drone {drone.id} moved: {prev_zone} -> {curr_zone}"
-                        )
+                    turn_moves.append(f"D{drone.id + 1}-{curr_zone}")
 
-                elif curr_zone != end_zone:
-                    pass
+            if turn_moves:
+                print(" ".join(turn_moves))
