@@ -14,7 +14,7 @@ class BookTable:
 
     def is_zone_available(self, zone_name, turn) -> bool:
         start_name = self.dronemap.start_hub.name
-        end_name = self.dronemap.start_hub.name
+        end_name = self.dronemap.end_hub.name
         if zone_name in (start_name, end_name):
             return True
 
