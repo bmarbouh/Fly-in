@@ -83,8 +83,6 @@ class Simulator:
         ) if schedules else 0
 
     def run_sim(self):
-        end_zone = self.droneMap.end_hub.name
-
         for turn in range(1, self.total_turns + 1):
             turn_moves = []
 
