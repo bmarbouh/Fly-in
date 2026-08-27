@@ -1,15 +1,14 @@
-PYTHON = uv run python3
-
+map = maps/challenger/01_the_impossible_dream.txt
 
 install:
 	uv sync
 	uv add flake8
 
 run:
-	@$(PYTHON) -m src
+	@python3 -m src --map "$(map)"
 
 debug:
-	@$(PYTHON) -m pdb -m src
+	@python3 -m pdb -m src
 
 lint:
 	@uv run flake8 src/
