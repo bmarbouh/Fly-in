@@ -21,7 +21,12 @@ def main():
     scheduler = Scheduler(graph, dronemap, book_table)
 
     paths = scheduler.scheduler()
-
+    # print(paths)
+    # print()
+    # print()
+    # print()
+    # print()
+    # print()
     Simulator(paths, dronemap).run_sim()
 
 if __name__ == "__main__":

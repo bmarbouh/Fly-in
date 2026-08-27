@@ -46,17 +46,17 @@ class BookTable:
 
 
 class DroneStatus:
-    def __init__(self, drone_id: int, schedule: List[Tuple[str, int]]):
+    def __init__(self, drone_id: int, path: List[Tuple[str, int]]):
         self.id = drone_id
-        self.schedule = schedule
+        self.schedule = path
         self.timeline: dict = {}
 
-        first_zone, first_turn = schedule[0]
+        first_zone, first_turn = path[0]
         self.timeline[first_turn] = first_zone
 
-        for i in range(len(schedule) - 1):
-            zone_a, turn_a = schedule[i]
-            zone_b, turn_b = schedule[i + 1]
+        for i in range(len(path) - 1):
+            zone_a, turn_a = path[i]
+            zone_b, turn_b = path[i + 1]
             gap = turn_b - turn_a
 
             if gap == 2:
@@ -65,22 +65,21 @@ class DroneStatus:
             self.timeline[turn_b] = zone_b
 
     def get_zone_at(self, turn: int):
-        """Returns the zone/connection the drone occupies at a specific turn."""
         return self.timeline.get(turn)
 
 
 class Simulator:
-    def __init__(self, schedules: Dict[int, List[Tuple[str, int]]], droneMap):
-        self.schedules = schedules
+    def __init__(self, paths: Dict[int, List[Tuple[str, int]]], droneMap):
+        self.paths = paths
         self.droneMap = droneMap
         self.drones = [
             DroneStatus(drone_id, path)
-            for drone_id, path in schedules.items()
+            for drone_id, path in paths.items()
         ]
 
         self.total_turns = max(
-            path[-1][1] for path in schedules.values() if path
-        ) if schedules else 0
+            path[-1][1] for path in paths.values() if path
+        ) if paths else 0
 
     def run_sim(self):
         for turn in range(1, self.total_turns + 1):
