@@ -65,11 +65,11 @@ class Dijkstra:
 
     def get_zone_mode(self, zone_name: str) -> str:
         if zone_name == self.dronemap.start_hub.name:
-            return self.dronemap.start_hub.mode
+            return str(self.dronemap.start_hub.mode)
         if zone_name == self.dronemap.end_hub.name:
-            return self.dronemap.end_hub.mode
+            return str(self.dronemap.end_hub.mode)
 
-        return self.dronemap.zones[zone_name].mode
+        return str(self.dronemap.zones[zone_name].mode)
 
     def get_cost(self, zone_name: str) -> int:
         status = self.get_zone_mode(zone_name)

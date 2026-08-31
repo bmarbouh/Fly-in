@@ -150,6 +150,8 @@ class Parsing:
                 if not line.startswith("nb_drones"):
                     raise RuntimeError("[ERROR]: First line must be nb_drones")
                 self.nb_drones = int(line.split(":")[1])
+                if self.nb_drones <= 0:
+                    raise RuntimeError("[ERROR]: nb_drones must be positive")
                 self.drone_map.nb_drones = self.nb_drones
                 is_first_line = False
             else:

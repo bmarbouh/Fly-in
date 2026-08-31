@@ -3,6 +3,7 @@ map = maps/challenger/01_the_impossible_dream.txt
 install:
 	uv sync
 	uv add flake8
+	uv add mypy
 
 run:
 	@python3 -m src --map "$(map)"
