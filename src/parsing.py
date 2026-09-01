@@ -100,6 +100,8 @@ class Parsing:
                 zone_data[3], ["color", "max_drones", "zone"]
             )
 
+        if int(metadata.get("max_drones", "1")) <= 0:
+            raise RuntimeError("[ERROR]: Invalid Meta data max drone must > 0")
         zone = Zone(
             name,
             x,
@@ -133,7 +135,8 @@ class Parsing:
         zone_b = zones[1].strip()
 
         max_link_capacity = int(metadata.get("max_link_capacity", "1"))
-
+        if max_link_capacity <= 0:
+            raise RuntimeError("[ERROR]: Invalid Meta data max drone must > 0")
         connection = Connections(zone_a, zone_b, max_link_capacity)
         return connection
 
