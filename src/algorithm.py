@@ -1,9 +1,7 @@
 from src.parsing import DroneMap
-
-import heapq
 from typing import Optional
-
 from src.simulator import BookTable
+import heapq
 
 
 class Edge:

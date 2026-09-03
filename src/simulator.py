@@ -81,6 +81,18 @@ class DroneStatus:
 
 
 class Simulator:
+    COLORS = [
+        "\033[91m",
+        "\033[92m",
+        "\033[93m",
+        "\033[94m",
+        "\033[95m",
+        "\033[96m",
+    ]
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
+    GRAY = "\033[90m"
+
     def __init__(
         self, paths: Dict[int, List[Tuple[str, int]]], droneMap: DroneMap
     ) -> None:
@@ -109,7 +121,10 @@ class Simulator:
                     continue
 
                 if curr_zone != prev_zone:
-                    turn_moves.append(f"D{drone.id + 1}-{curr_zone}")
+                    color = self.COLORS[drone.id % len(self.COLORS)]
+                    m_str = f"{color}D{drone.id + 1}-{curr_zone}{self.RESET}"
+                    turn_moves.append(m_str)
 
             if turn_moves:
-                print(" ".join(turn_moves))
+                header = f"{self.BOLD}{self.GRAY}[Turn {turn:02d}]{self.RESET}"
+                print(f"{header} " + " ".join(turn_moves))
