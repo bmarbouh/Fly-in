@@ -168,6 +168,21 @@ class Parsing:
                     self.drone_map.zones[zone.name] = zone
                 elif line_type == "connection":
                     connection = self.parse_connections(line)
+                    known_names = set(self.drone_map.zones.keys())
+                    if self.drone_map.start_hub is not None:
+                        known_names.add(self.drone_map.start_hub.name)
+                    if self.drone_map.end_hub is not None:
+                        known_names.add(self.drone_map.end_hub.name)
+                    if connection.zone_a not in known_names:
+                        raise RuntimeError(
+                            f"[ERROR]: Connection references undefined zone "
+                            f"'{connection.zone_a}'"
+                        )
+                    if connection.zone_b not in known_names:
+                        raise RuntimeError(
+                            f"[ERROR]: Connection references undefined zone "
+                            f"'{connection.zone_b}'"
+                        )
                     self.drone_map.connections.append(connection)
                 if line_type not in [
                     "start_hub",

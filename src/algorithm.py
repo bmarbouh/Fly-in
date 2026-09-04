@@ -2,6 +2,7 @@ from src.parsing import DroneMap
 from typing import Optional
 from src.simulator import BookTable
 import heapq
+from collections import deque
 
 
 class Edge:
@@ -39,6 +40,21 @@ class Graph:
                 )
 
         return self.graph
+
+    def is_reachable(self, start: str, end: str) -> bool:
+        if start == end:
+            return True
+        visited = {start}
+        queue = deque([start])
+        while queue:
+            current = queue.popleft()
+            for edge in self.graph.get(current, []):
+                if edge.to_zone == end:
+                    return True
+                if edge.to_zone not in visited:
+                    visited.add(edge.to_zone)
+                    queue.append(edge.to_zone)
+        return False
 
 
 class Dijkstra:
@@ -187,6 +203,17 @@ class Scheduler:
         self.paths: dict[int, list[tuple[str, int]]] = {}
 
     def scheduler(self) -> dict[int, list[tuple[str, int]]]:
+        start_name = self.dronemap.start_hub.name
+        end_name = self.dronemap.end_hub.name
+        if not self.graph.is_reachable(
+            self.dronemap.start_hub.name, self.dronemap.end_hub.name
+                ):
+            raise RuntimeError(
+                f"[ERROR]: No path exists from "
+                f"'{start_name}' to "
+                f"'{end_name}' — check for blocked zones "
+                f"or missing connections in the map."
+            )
         for drone_id in range(self.dronemap.nb_drones):
             start_turn = 0
 
