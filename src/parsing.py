@@ -42,6 +42,7 @@ class Parsing:
         self.drone_map: DroneMap = DroneMap()
         self.path: str = path
         self.data: List[str] = []
+        self.seen_connections: set = set()
 
     def open_file(self) -> None:
         try:
@@ -179,11 +180,35 @@ class Parsing:
             else:
                 line_type, line_data = line.split(":", 1)
                 if line_type == "start_hub":
+                    if self.drone_map.start_hub is not None:
+                        raise RuntimeError(
+                            "[ERROR]: Multiple start_hub definitions found"
+                                )
                     self.drone_map.start_hub = self.parse_zones(line)
                 elif line_type == "end_hub":
+                    if self.drone_map.end_hub is not None:
+                        raise RuntimeError(
+                            "[ERROR]: Multiple end_hub definitions found"
+                                )
                     self.drone_map.end_hub = self.parse_zones(line)
                 elif line_type == "hub":
                     zone = self.parse_zones(line)
+                    if zone.name in self.drone_map.zones:
+                        raise RuntimeError(
+                            f"[ERROR]: Duplicate zone name '{zone.name}'"
+                        )
+                    if (
+                        self.drone_map.start_hub is not None
+                        and zone.name == self.drone_map.start_hub.name
+                    ) or (
+                        self.drone_map.end_hub is not None
+                        and zone.name == self.drone_map.end_hub.name
+                    ):
+                        raise RuntimeError(
+                            f"[ERROR]: Zone '{zone.name}' "
+                            "collides with start/end hub name"
+                        )
+                    self.drone_map.zones[zone.name] = zone
                     self.drone_map.zones[zone.name] = zone
                 elif line_type == "connection":
                     connection = self.parse_connections(line)
@@ -202,6 +227,16 @@ class Parsing:
                             f"[ERROR]: Connection references undefined zone "
                             f"'{connection.zone_b}'"
                         )
+
+                    a, b = sorted([connection.zone_a, connection.zone_b])
+                    conn_key = (a, b)
+                    if conn_key in self.seen_connections:
+                        raise RuntimeError(
+                            f"[ERROR]: Duplicate connection between "
+                            f"'{connection.zone_a}' and '{connection.zone_b}'"
+                        )
+                    self.seen_connections.add(conn_key)
+
                     self.drone_map.connections.append(connection)
                 if line_type not in [
                     "start_hub",
@@ -212,6 +247,7 @@ class Parsing:
                     raise RuntimeError(
                         f"[ERROR]: Invalid line type: {line_type}"
                     )
+
         if self.drone_map.end_hub is None:
             raise RuntimeError("[ERROR]: Missing End Hub in this map")
         if self.drone_map.start_hub is None:
