@@ -1,7 +1,10 @@
+"""Parsing module: reads a map file and builds a validated DroneMap."""
 from typing import List, Dict, Tuple, Optional
 
 
 class Zone:
+    """A single zone (node) in the map, with type and capacity metadata."""
+
     def __init__(
         self,
         name: str,
@@ -11,6 +14,7 @@ class Zone:
         max_drones: int = 1,
         mode: str = "normal",
     ) -> None:
+        """Create a Zone with a name, coordinates, and optional metadata."""
         self.name: str = name
         self.coords: Tuple[int, int] = (x, y)
         self.color: str = color
@@ -19,16 +23,22 @@ class Zone:
 
 
 class Connections:
+    """A bidirectional connection between two zones."""
+
     def __init__(
         self, zone_a: str, zone_b: str, max_link_capacity: int = 1
     ) -> None:
+        """Create a connection between zone_a and zone_b."""
         self.zone_a: str = zone_a
         self.zone_b: str = zone_b
         self.max_link_capacity: int = max_link_capacity
 
 
 class DroneMap:
+    """Holds the fully parsed map: drone count, zones, and connections."""
+
     def __init__(self) -> None:
+        """Initialize an empty map with no zones or connections yet."""
         self.nb_drones: int = 0
         self.start_hub: Optional[Zone] = None
         self.end_hub: Optional[Zone] = None
@@ -37,7 +47,10 @@ class DroneMap:
 
 
 class Parsing:
+    """Reads a map file from disk and builds a validated DroneMap."""
+
     def __init__(self, path: str) -> None:
+        """Store the map file path and prepare empty parsing state."""
         self.nb_drones: int = 0
         self.drone_map: DroneMap = DroneMap()
         self.path: str = path
@@ -45,6 +58,7 @@ class Parsing:
         self.seen_connections: set = set()
 
     def open_file(self) -> None:
+        """Read the map file into self.data, one line per entry."""
         try:
             with open(self.path, "r") as file:
                 self.data = file.read().splitlines()
@@ -52,6 +66,7 @@ class Parsing:
             raise RuntimeError("[ERROR]: File Not Found")
 
     def remove_comments(self) -> None:
+        """Strip '#' comments and blank lines from self.data."""
         if not self.data:
             raise RuntimeError("[ERROR]: Maps cannot be empty")
 
@@ -68,6 +83,7 @@ class Parsing:
     def parse_metadata(
         self, metadata: str, av_meta: List[str]
     ) -> Dict[str, str]:
+        """Parse a "[key=value ...]" block into a dictionary."""
         meta_dict: Dict[str, str] = {}
         if not metadata.startswith("["):
             raise RuntimeError("[ERROR]: Invalid metadata format")
@@ -85,6 +101,7 @@ class Parsing:
         return meta_dict
 
     def parse_zones(self, line: str) -> Zone:
+        """Parse a hub/start_hub/end_hub line into a Zone instance."""
         zone_name, zone_data_str = line.split(":", 1)
         zone_data_str = zone_data_str.strip()
         zone_data: List[str] = zone_data_str.split(" ", 3)
@@ -115,6 +132,7 @@ class Parsing:
         return zone
 
     def parse_connections(self, line: str) -> Connections:
+        """Parse a connection line into a Connections instance."""
         connection_name, connection_data = line.split(":", 1)
         connection_data = connection_data.strip()
 
@@ -142,6 +160,7 @@ class Parsing:
         return connection
 
     def _check_all_zones_connected(self) -> None:
+        """Raise an error if any zone has no connection at all."""
         connected_names: set[str] = set()
         for conn in self.drone_map.connections:
             connected_names.add(conn.zone_a)
@@ -161,6 +180,7 @@ class Parsing:
             )
 
     def parser(self) -> DroneMap:
+        """Parse the whole map file and return the validated DroneMap."""
         self.open_file()
         self.remove_comments()
 
@@ -208,7 +228,6 @@ class Parsing:
                             f"[ERROR]: Zone '{zone.name}' "
                             "collides with start/end hub name"
                         )
-                    self.drone_map.zones[zone.name] = zone
                     self.drone_map.zones[zone.name] = zone
                 elif line_type == "connection":
                     connection = self.parse_connections(line)

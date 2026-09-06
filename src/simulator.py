@@ -1,9 +1,13 @@
+"""Shared reservation table, per-drone timelines, and turn-by-turn replay."""
 from typing import List, Dict, Tuple, Optional
 from src.parsing import DroneMap
 
 
 class BookTable:
+    """Shared ledger tracking which zones/connections are reserved when."""
+
     def __init__(self, dronemap: DroneMap) -> None:
+        """Store the map and build the per-connection capacity lookup."""
         self.dronemap: DroneMap = dronemap
         self.zones_res: Dict[Tuple[str, int], int] = {}
         self.conn_res: Dict[Tuple[Tuple[str, str], int], int] = {}
@@ -13,6 +17,7 @@ class BookTable:
             self.conn_caps[(a, b)] = conn.max_link_capacity
 
     def is_zone_available(self, zone_name: str, turn: int) -> bool:
+        """Return True if the zone has room for another drone at turn."""
         if (
             self.dronemap.start_hub is None
             or self.dronemap.end_hub is None
@@ -32,6 +37,7 @@ class BookTable:
         return True
 
     def is_conn_available(self, zone_a: str, zone_b: str, turn: int) -> bool:
+        """Return True if the connection has room for another drone."""
         a, b = sorted([zone_a, zone_b])
         sorted_pair: Tuple[str, str] = (a, b)
 
@@ -42,10 +48,12 @@ class BookTable:
         return bool(conn_nb < link_cap)
 
     def reserve_zone(self, zone_name: str, turn: int) -> None:
+        """Reserve one slot in the zone at the given turn."""
         key: Tuple[str, int] = (zone_name, turn)
         self.zones_res[key] = self.zones_res.get(key, 0) + 1
 
     def reserve_conn(self, zone_a: str, zone_b: str, turn: int) -> None:
+        """Reserve one slot on the connection at the given turn."""
         a, b = sorted([zone_a, zone_b])
         sorted_pair: Tuple[str, str] = (a, b)
 
@@ -54,7 +62,10 @@ class BookTable:
 
 
 class DroneStatus:
+    """A single drone's path turned into a turn-indexed lookup."""
+
     def __init__(self, drone_id: int, path: List[Tuple[str, int]]) -> None:
+        """Build the turn -> zone/connection timeline from the raw path."""
         self.id: int = drone_id
         self.schedule: List[Tuple[str, int]] = path
         self.timeline: Dict[int, str] = {}
@@ -73,10 +84,13 @@ class DroneStatus:
             self.timeline[turn_b] = zone_b
 
     def get_zone_at(self, turn: int) -> Optional[str]:
+        """Return where the drone is at the given turn, or None."""
         return self.timeline.get(turn)
 
 
 class Simulator:
+    """Replays every drone's precomputed path, turn by turn."""
+
     COLORS = [
         "\033[91m",
         "\033[92m",
@@ -92,6 +106,7 @@ class Simulator:
     def __init__(
         self, paths: Dict[int, List[Tuple[str, int]]], droneMap: DroneMap
     ) -> None:
+        """Wrap every drone's path in a DroneStatus and find total_turns."""
         self.paths: Dict[int, List[Tuple[str, int]]] = paths
         self.droneMap: DroneMap = droneMap
         self.drones: List[DroneStatus] = [
@@ -106,6 +121,7 @@ class Simulator:
         )
 
     def run_sim(self) -> None:
+        """Print each turn's moves in the required D<ID>-<zone> format."""
         for turn in range(1, self.total_turns + 1):
             turn_moves: List[str] = []
 

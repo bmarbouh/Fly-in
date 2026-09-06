@@ -5,6 +5,11 @@ from src.simulator import Simulator, BookTable
 
 
 def main() -> None:
+    """
+    Reads the map file given via --map, builds the graph and reservation
+    table, schedules every drone's path through the Scheduler, then hands
+    the resulting paths to the Simulator to print the turn-by-turn output.
+    """
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument(
         "--map",

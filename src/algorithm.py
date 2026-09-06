@@ -1,3 +1,4 @@
+"""Graph, time-aware Dijkstra, and multi-drone scheduling logic."""
 from src.parsing import DroneMap
 from typing import Optional
 from src.simulator import BookTable
@@ -6,18 +7,25 @@ from collections import deque
 
 
 class Edge:
+    """A directed link from one zone to a neighboring zone."""
+
     def __init__(self, to_zone: str, max_link_capacity: int) -> None:
+        """Store the destination zone and this link's capacity."""
         self.to_zone = to_zone
         self.max_link_capacity = max_link_capacity
 
 
 class Graph:
+    """Adjacency-list graph built from a DroneMap's connections."""
+
     def __init__(self, droneMap: DroneMap) -> None:
+        """Store the map and build the adjacency list immediately."""
         self.droneMap = droneMap
         self.graph: dict[str, list[Edge]] = {}
         self.build_graph()
 
     def check_blocked(self, name: str) -> bool:
+        """Return True if the named zone exists and is not blocked."""
         if (
             self.droneMap.start_hub is not None
             and name == self.droneMap.start_hub.name
@@ -35,6 +43,7 @@ class Graph:
         return bool(zone.mode != "blocked")
 
     def build_graph(self) -> dict[str, list[Edge]]:
+        """Build and return the adjacency list from all connections."""
         for conn in self.droneMap.connections:
             self.graph[conn.zone_a] = []
             self.graph[conn.zone_b] = []
@@ -52,6 +61,7 @@ class Graph:
         return self.graph
 
     def is_reachable(self, start: str, end: str) -> bool:
+        """Return True if end is reachable from start, ignoring capacity."""
         if start == end:
             return True
         visited = {start}
@@ -68,6 +78,8 @@ class Graph:
 
 
 class Dijkstra:
+    """Time-aware shortest-path search over (zone, turn) states."""
+
     def __init__(
         self,
         start_name: str,
@@ -77,6 +89,7 @@ class Dijkstra:
         book_table: BookTable,
         start_turn: int
     ) -> None:
+        """Store search inputs and initialize empty search state."""
         self.start_name = start_name
         self.end_name = end_name
         self.graph = graph
@@ -88,6 +101,7 @@ class Dijkstra:
         self.queue: list[tuple[int, tuple[str, int]]] = []
 
     def get_zone_mode(self, zone_name: str) -> str:
+        """Return the mode of the named zone (start, end, or regular)."""
         if zone_name == self.dronemap.start_hub.name:
             return str(self.dronemap.start_hub.mode)
         if zone_name == self.dronemap.end_hub.name:
@@ -96,6 +110,7 @@ class Dijkstra:
         return str(self.dronemap.zones[zone_name].mode)
 
     def get_cost(self, zone_name: str) -> int:
+        """Return the turn cost of moving into the named zone."""
         status = self.get_zone_mode(zone_name)
         if status == "restricted":
             return 2
@@ -104,6 +119,7 @@ class Dijkstra:
     def path_finder(
         self
     ) -> Optional[list[tuple[str, int]]]:
+        """Find the earliest conflict-free path from start to end."""
         start_state = (self.start_name, self.start_turn)
         self.distance[start_state] = self.start_turn
 
@@ -201,18 +217,22 @@ class Dijkstra:
 
 
 class Scheduler:
+    """Plans a conflict-free path for every drone, one at a time."""
+
     def __init__(
         self,
         graph: Graph,
         dronemap: DroneMap,
         book_table: BookTable
     ) -> None:
+        """Store the graph, map, and shared reservation table."""
         self.graph = graph
         self.dronemap = dronemap
         self.book_table = book_table
         self.paths: dict[int, list[tuple[str, int]]] = {}
 
     def scheduler(self) -> dict[int, list[tuple[str, int]]]:
+        """Schedule every drone and return each one's final path."""
         start_name = self.dronemap.start_hub.name
         end_name = self.dronemap.end_hub.name
         if not self.graph.is_reachable(
