@@ -9,7 +9,7 @@ def main() -> None:
     arg_parser.add_argument(
         "--map",
         type=str,
-        default="maps/easy/01_linear_path.txt",
+        default="maps/challenger/01_the_impossible_dream.txt",
         help="Path to the map file"
     )
 

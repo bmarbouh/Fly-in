@@ -140,6 +140,25 @@ class Parsing:
         connection = Connections(zone_a, zone_b, max_link_capacity)
         return connection
 
+    def _check_all_zones_connected(self) -> None:
+        connected_names: set[str] = set()
+        for conn in self.drone_map.connections:
+            connected_names.add(conn.zone_a)
+            connected_names.add(conn.zone_b)
+
+        all_names: set[str] = set(self.drone_map.zones.keys())
+        if self.drone_map.start_hub is not None:
+            all_names.add(self.drone_map.start_hub.name)
+        if self.drone_map.end_hub is not None:
+            all_names.add(self.drone_map.end_hub.name)
+
+        isolated = sorted(all_names - connected_names)
+        if isolated:
+            raise RuntimeError(
+                f"[ERROR]: The following zone(s) have no connection at all: "
+                f"{', '.join(isolated)}"
+            )
+
     def parser(self) -> DroneMap:
         self.open_file()
         self.remove_comments()
@@ -197,4 +216,5 @@ class Parsing:
             raise RuntimeError("[ERROR]: Missing End Hub in this map")
         if self.drone_map.start_hub is None:
             raise RuntimeError("[ERROR]: Missing Start Hub in this map")
+        self._check_all_zones_connected()
         return self.drone_map

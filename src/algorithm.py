@@ -17,12 +17,22 @@ class Graph:
         self.graph: dict[str, list[Edge]] = {}
         self.build_graph()
 
-    def check_blocked(self, name: str) -> int:
-        for name, zone in self.droneMap.zones.items():
-            if name == zone.name:
-                if zone.mode != "blocked":
-                    return 1
-        return 0
+    def check_blocked(self, name: str) -> bool:
+        if (
+            self.droneMap.start_hub is not None
+            and name == self.droneMap.start_hub.name
+        ):
+            return bool(self.droneMap.start_hub.mode != "blocked")
+        if (
+            self.droneMap.end_hub is not None
+            and name == self.droneMap.end_hub.name
+        ):
+            return bool(self.droneMap.end_hub.mode != "blocked")
+
+        zone = self.droneMap.zones.get(name)
+        if zone is None:
+            return False
+        return bool(zone.mode != "blocked")
 
     def build_graph(self) -> dict[str, list[Edge]]:
         for conn in self.droneMap.connections:
@@ -211,8 +221,8 @@ class Scheduler:
             raise RuntimeError(
                 f"[ERROR]: No path exists from "
                 f"'{start_name}' to "
-                f"'{end_name}' — check for blocked zones "
-                f"or missing connections in the map."
+                f"'{end_name}' — check for "
+                f"missing connections in the map."
             )
         for drone_id in range(self.dronemap.nb_drones):
             start_turn = 0

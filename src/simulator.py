@@ -7,13 +7,10 @@ class BookTable:
         self.dronemap: DroneMap = dronemap
         self.zones_res: Dict[Tuple[str, int], int] = {}
         self.conn_res: Dict[Tuple[Tuple[str, str], int], int] = {}
-        self.conn_caps: Dict[Tuple[str, str], int] = {
-            (
-                conn.zone_a if conn.zone_a < conn.zone_b else conn.zone_b,
-                conn.zone_b if conn.zone_a < conn.zone_b else conn.zone_a,
-            ): conn.max_link_capacity
-            for conn in dronemap.connections
-        }
+        self.conn_caps: Dict[Tuple[str, str], int] = {}
+        for conn in dronemap.connections:
+            a, b = sorted([conn.zone_a, conn.zone_b])
+            self.conn_caps[(a, b)] = conn.max_link_capacity
 
     def is_zone_available(self, zone_name: str, turn: int) -> bool:
         if (
@@ -35,9 +32,8 @@ class BookTable:
         return True
 
     def is_conn_available(self, zone_a: str, zone_b: str, turn: int) -> bool:
-        sorted_pair: Tuple[str, str] = (
-            (zone_a, zone_b) if zone_a < zone_b else (zone_b, zone_a)
-        )
+        a, b = sorted([zone_a, zone_b])
+        sorted_pair: Tuple[str, str] = (a, b)
 
         conn_key: Tuple[Tuple[str, str], int] = (sorted_pair, turn)
         conn_nb: int = self.conn_res.get(conn_key, 0)
@@ -50,9 +46,9 @@ class BookTable:
         self.zones_res[key] = self.zones_res.get(key, 0) + 1
 
     def reserve_conn(self, zone_a: str, zone_b: str, turn: int) -> None:
-        sorted_pair: Tuple[str, str] = (
-            (zone_a, zone_b) if zone_a < zone_b else (zone_b, zone_a)
-        )
+        a, b = sorted([zone_a, zone_b])
+        sorted_pair: Tuple[str, str] = (a, b)
+
         conn_key: Tuple[Tuple[str, str], int] = (sorted_pair, turn)
         self.conn_res[conn_key] = self.conn_res.get(conn_key, 0) + 1
 
