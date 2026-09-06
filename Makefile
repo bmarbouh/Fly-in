@@ -1,9 +1,7 @@
 map = maps/challenger/01_the_impossible_dream.txt
 
 install:
-	uv sync
-	uv add flake8
-	uv add mypy
+	pip3 install flake8 mypy
 
 run:
 	@python3 -m src --map "$(map)"
@@ -12,8 +10,8 @@ debug:
 	@python3 -m pdb -m src
 
 lint:
-	@uv run flake8 src/
-	@uv run mypy src/ --follow-imports=skip --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+	@flake8 src/
+	@mypy src/ --follow-imports=skip --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 clean:
 	@rm -rf .mypy_cache
