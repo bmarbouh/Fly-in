@@ -98,7 +98,8 @@ class Dijkstra:
         self.start_turn = start_turn
         self.distance: dict[tuple[str, int], int] = {}
         self.parent: dict[tuple[str, int], tuple[str, int]] = {}
-        self.queue: list[tuple[int, tuple[str, int]]] = []
+        # Queue format: (arrival_turn, priority_weight, state)
+        self.queue: list[tuple[int, int, tuple[str, int]]] = []
 
     def get_zone_mode(self, zone_name: str) -> str:
         """Return the mode of the named zone (start, end, or regular)."""
@@ -123,15 +124,18 @@ class Dijkstra:
         start_state = (self.start_name, self.start_turn)
         self.distance[start_state] = self.start_turn
 
+        start_weight = (
+            0 if self.get_zone_mode(self.start_name) == "priority" else 1
+        )
         heapq.heappush(
             self.queue,
-            (self.start_turn, start_state)
+            (self.start_turn, start_weight, start_state)
         )
 
         final_state: Optional[tuple[str, int]] = None
 
         while self.queue:
-            current_cost, current_state = heapq.heappop(self.queue)
+            current_cost, _, current_state = heapq.heappop(self.queue)
             current_zone, current_turn = current_state
 
             if current_cost > self.distance.get(
@@ -172,9 +176,12 @@ class Dijkstra:
                     self.distance[new_state] = arrival_turn
                     self.parent[new_state] = current_state
 
+                    p_weight = (
+                        0 if self.get_zone_mode(next_zone) == "priority" else 1
+                    )
                     heapq.heappush(
                         self.queue,
-                        (arrival_turn, new_state)
+                        (arrival_turn, p_weight, new_state)
                     )
 
             wait_turn = current_turn + 1
@@ -196,7 +203,7 @@ class Dijkstra:
 
                     heapq.heappush(
                         self.queue,
-                        (wait_turn, wait_state)
+                        (wait_turn, 1, wait_state)
                     )
 
         if final_state is None:
@@ -237,7 +244,7 @@ class Scheduler:
         end_name = self.dronemap.end_hub.name
         if not self.graph.is_reachable(
             self.dronemap.start_hub.name, self.dronemap.end_hub.name
-                ):
+        ):
             raise RuntimeError(
                 f"[ERROR]: No path exists from "
                 f"'{start_name}' to "
