@@ -4,6 +4,7 @@ nb_drones: 1
 start_hub: start 0 0
 hub: normal_path 1 1 [max_drones=1]
 hub: priority_path 1 -1 [max_drones=1 zone=priority]
+hub: priority_path1 1 -1 [max_drones=1 zone=priority]
 end_hub: goal 2 0
 
 connection: start-normal_path

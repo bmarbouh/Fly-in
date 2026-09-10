@@ -136,13 +136,14 @@ class Parsing:
         connection_name, connection_data = line.split(":", 1)
         connection_data = connection_data.strip()
 
-        metadata: Dict[str, str] = {}
+        parts = connection_data.split(" ", 1)
+        connection_data = parts[0]
 
-        if "[" in connection_data and connection_data.endswith("]"):
-            start_idx = connection_data.index("[")
-            meta_str = connection_data[start_idx:]
-            connection_data = connection_data[:start_idx].strip()
-            metadata = self.parse_metadata(meta_str, ["max_link_capacity"])
+        metadata: Dict[str, str] = {}
+        if len(parts) > 1:
+            metadata = self.parse_metadata(
+                parts[1].strip(), ["max_link_capacity"]
+            )
 
         if "-" not in connection_data:
             raise RuntimeError(
