@@ -18,11 +18,6 @@ class BookTable:
 
     def is_zone_available(self, zone_name: str, turn: int) -> bool:
         """Return True if the zone has room for another drone at turn."""
-        if (
-            self.dronemap.start_hub is None
-            or self.dronemap.end_hub is None
-        ):
-            return True
 
         start_name: str = self.dronemap.start_hub.name
         end_name: str = self.dronemap.end_hub.name

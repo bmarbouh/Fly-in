@@ -27,19 +27,15 @@ class Graph:
     def check_blocked(self, name: str) -> bool:
         """Return True if the named zone exists and is not blocked."""
         if (
-            self.droneMap.start_hub is not None
-            and name == self.droneMap.start_hub.name
+            name == self.droneMap.start_hub.name
         ):
             return bool(self.droneMap.start_hub.mode != "blocked")
         if (
-            self.droneMap.end_hub is not None
-            and name == self.droneMap.end_hub.name
+            name == self.droneMap.end_hub.name
         ):
             return bool(self.droneMap.end_hub.mode != "blocked")
 
         zone = self.droneMap.zones.get(name)
-        if zone is None:
-            return False
         return bool(zone.mode != "blocked")
 
     def build_graph(self) -> dict[str, list[Edge]]:
@@ -98,7 +94,6 @@ class Dijkstra:
         self.start_turn = start_turn
         self.distance: dict[tuple[str, int], int] = {}
         self.parent: dict[tuple[str, int], tuple[str, int]] = {}
-        # Queue format: (arrival_turn, priority_weight, state)
         self.queue: list[tuple[int, int, tuple[str, int]]] = []
 
     def get_zone_mode(self, zone_name: str) -> str:
